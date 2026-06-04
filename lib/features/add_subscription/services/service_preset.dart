@@ -1,0 +1,17 @@
+const List<String> servicePresets = [
+  'Netflix',
+  'Spotify',
+  'Apple Music',
+  'YouTube Premium',
+  'Amazon Prime',
+  'Disney+',
+  'iCloud Storage',
+  'Adobe Creative Cloud',
+  'Microsoft 365',
+  'Notion',
+  'Canva Pro',
+  'ChatGPT Plus',
+  'Google One',
+  'Gym Membership',
+  'Gemini Pro',
+];
