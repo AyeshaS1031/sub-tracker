@@ -36,13 +36,7 @@ class DashboardHeaderTitle extends StatelessWidget {
               color: AppTheme.onSurface,
             ),
           ),
-          IconButton(
-            onPressed: () {},
-            icon: Icon(
-              Icons.account_circle_outlined,
-              color: AppTheme.primary,
-            ),
-          ),
+          const SizedBox(width: 48),
         ],
       ),
     );

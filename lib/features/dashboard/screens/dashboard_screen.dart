@@ -41,18 +41,21 @@ class DashboardScreen extends StatelessWidget {
                     delegate: SliverChildListDelegate([
                       YourBurnSection(
                         monthlyTotal: burn,
+                        currencySymbol: repo.currencySymbol,
                         showPlaceholderWhenEmpty: svcCount == 0,
                       ),
                       const SizedBox(height: 32),
                       SpendingPichart(
                         totals: totals,
                         serviceCount: svcCount,
+                        currencySymbol: repo.currencySymbol,
                       ),
                       const SizedBox(height: 24),
                       MonthlySpendingHistoryCard(
                         months: hist.months,
                         amounts: hist.amounts,
                         avgMonthly: avg,
+                        currencySymbol: repo.currencySymbol,
                       ),
                       const SizedBox(height: 20),
                       const DeinfluencingTipCard(),

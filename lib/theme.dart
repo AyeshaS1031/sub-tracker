@@ -18,10 +18,6 @@ class AppTheme {
   static const Color outline = Color(0xFF767575);
   static const Color outlineVariant = Color(0xFF484848);
   static const Color error = Color(0xFFee7d77);
-  static const Color labelGold = Color(0xFFA89E8D);      
-  static const Color fieldBackground = Color(0xFF1E1E1E); 
-  static const Color warningOrange = Color(0xFFD06B4C);   
-  static const Color addSubButton = Color(0xFFE8E8E8); 
 
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,

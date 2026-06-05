@@ -1,1 +1,0 @@
-enum BillingFrequency { monthly, annual }

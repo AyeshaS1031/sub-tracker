@@ -4,26 +4,59 @@ import 'package:sub_tracker/data/subscription_repository.dart';
 import 'package:sub_tracker/features/splash/screens/splash_screen.dart';
 import 'package:sub_tracker/theme.dart';
 
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+Future<SubscriptionRepository> _initRepo() async {
   await Hive.initFlutter();
   final box = await Hive.openBox<dynamic>(SubscriptionRepository.boxName);
-  final repo = SubscriptionRepository(box);
-
-  runApp(MyApp(repo: repo));
+  final settingsBox =
+      await Hive.openBox<dynamic>(SubscriptionRepository.settingsBoxName);
+  return SubscriptionRepository(box, settingsBox);
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key, required this.repo});
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const SubtrackrApp());
+}
 
-  final SubscriptionRepository repo;
+class SubtrackrApp extends StatelessWidget {
+  const SubtrackrApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Subtrackr',
       theme: AppTheme.darkTheme,
-      home: SplashScreen(repo: repo),
+      themeMode: ThemeMode.dark,
+      home: FutureBuilder<SubscriptionRepository>(
+        future: _initRepo(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Scaffold(
+              backgroundColor: AppTheme.background,
+              body: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    'Failed to load app data.\n${snapshot.error}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: AppTheme.onSurface),
+                  ),
+                ),
+              ),
+            );
+          }
+
+          if (!snapshot.hasData) {
+            return const Scaffold(
+              backgroundColor: AppTheme.background,
+              body: Center(
+                child: CircularProgressIndicator(color: AppTheme.secondary),
+              ),
+            );
+          }
+
+          return SplashScreen(repo: snapshot.data!);
+        },
+      ),
     );
   }
 }

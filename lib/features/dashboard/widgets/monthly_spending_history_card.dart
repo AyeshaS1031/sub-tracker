@@ -10,11 +10,13 @@ class MonthlySpendingHistoryCard extends StatelessWidget {
     required this.months,
     required this.amounts,
     required this.avgMonthly,
+    required this.currencySymbol,
   });
 
   final List<DateTime> months;
   final List<double> amounts;
   final double avgMonthly;
+  final String currencySymbol;
 
   @override
   Widget build(BuildContext context) {
@@ -25,8 +27,10 @@ class MonthlySpendingHistoryCard extends StatelessWidget {
     );
     final cap = maxY <= 0 ? 100.0 : maxY * 1.15;
 
-    final avgTxt = NumberFormat.currency(symbol: r'$', decimalDigits: 0)
-        .format(avgMonthly);
+    final avgTxt = NumberFormat.currency(
+      symbol: currencySymbol,
+      decimalDigits: 0,
+    ).format(avgMonthly);
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 14),
@@ -84,7 +88,7 @@ class MonthlySpendingHistoryCard extends StatelessWidget {
                       final monthLabel =
                           DateFormat('MMMM').format(months[groupIndex]);
                       final cost = NumberFormat.currency(
-                        symbol: r'$',
+                        symbol: currencySymbol,
                         decimalDigits: 0,
                       ).format(amount);
                       return BarTooltipItem(

@@ -29,20 +29,20 @@ class _AppShellScreenState extends State<AppShellScreen> {
           _scaffoldKey.currentState?.openDrawer();
         },
       ),
-      const ViewSubscriptionScreen(),
-      const SettingsScreen(),
+      ViewSubscriptionScreen(repo: widget.repo),
+      SettingsScreen(repo: widget.repo),
     ];
 
     return Scaffold(
       key: _scaffoldKey,
+      backgroundColor: AppTheme.background,
       drawer: Drawer(
         backgroundColor: AppTheme.surfaceContainerLow,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration:
-                  const BoxDecoration(color: AppTheme.surfaceContainer),
+              decoration: const BoxDecoration(color: AppTheme.surfaceContainer),
               child: Text(
                 'SUBTRACKR',
                 style: GoogleFonts.spaceGrotesk(
@@ -88,17 +88,13 @@ class _AppShellScreenState extends State<AppShellScreen> {
           ],
         ),
       ),
-      body: IndexedStack(
-        index: _tab,
-        children: pages,
-      ),
+      body: IndexedStack(index: _tab, children: pages),
       floatingActionButton: _tab == 0
           ? FloatingActionButton(
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) =>
-                        AddSubscriptionScreen(repo: widget.repo),
+                    builder: (_) => AddSubscriptionScreen(repo: widget.repo),
                   ),
                 );
               },

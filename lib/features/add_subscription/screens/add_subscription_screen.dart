@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sub_tracker/data/models/subscription.dart';
 import 'package:sub_tracker/data/subscription_repository.dart';
 import 'package:sub_tracker/theme.dart';
 
@@ -34,11 +35,7 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
       return;
     }
 
-    widget.repo.addSubscription(
-      name: name,
-      monthlyAmount: raw,
-      category: _cat,
-    );
+    widget.repo.addSubscription(name: name, monthlyAmount: raw, category: _cat);
     Navigator.of(context).pop();
   }
 
@@ -64,18 +61,16 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: _amountCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Monthly cost (\$)',
-                border: OutlineInputBorder(),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: InputDecoration(
+                labelText: 'Monthly cost (${widget.repo.currencySymbol})',
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
-            Text(
-              'Category',
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
+            Text('Category', style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 6),
             DropdownButton<SpendCategory>(
               value: _cat,

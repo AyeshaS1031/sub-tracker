@@ -1,31 +1,50 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:sub_tracker/data/models/subscription.dart';
 
-enum SpendCategory { subscriptions, utilities, entertainment }
-
-extension SpendCategoryIx on SpendCategory {
-  int get index => SpendCategory.values.indexOf(this);
-}
-
+/// Reads and writes subscriptions in Hive.
+/// Screens never touch Hive directly — they call methods here.
 class SubscriptionRepository extends ChangeNotifier {
-  SubscriptionRepository(this._box);
+  SubscriptionRepository(this._box, this._settingsBox);
 
   final Box<dynamic> _box;
+  final Box<dynamic> _settingsBox;
 
   static const String boxName = 'subscriptions';
+  static const String settingsBoxName = 'settings';
 
-  Iterable<Map<String, dynamic>> _rows() sync* {
+  static const List<String> currencyOptions = [r'$', '€', '£', 'LKR'];
+
+  String get currencySymbol =>
+      (_settingsBox.get('currency') as String?) ?? r'$';
+
+  void setCurrency(String symbol) {
+    _settingsBox.put('currency', symbol);
+    notifyListeners();
+  }
+
+  String formatMoney(double amount, {int decimals = 2}) {
+    return '$currencySymbol${amount.toStringAsFixed(decimals)}';
+  }
+
+  void clearAll() {
+    _box.clear();
+    notifyListeners();
+  }
+
+  List<Subscription> _all() {
+    final out = <Subscription>[];
     for (final key in _box.keys) {
       final raw = _box.get(key);
       if (raw is Map) {
-        yield Map<String, dynamic>.from(raw);
+        out.add(Subscription.fromMap(key.toString(), Map<String, dynamic>.from(raw)));
       }
     }
+    out.sort((a, b) => b.created.compareTo(a.created));
+    return out;
   }
 
-  List<Map<String, dynamic>> allSubscriptions() {
-    return _rows().toList();
-  }
+  List<Subscription> allSubscriptions() => _all();
 
   void addSubscription({
     required String name,
@@ -33,19 +52,21 @@ class SubscriptionRepository extends ChangeNotifier {
     required SpendCategory category,
   }) {
     final id = DateTime.now().millisecondsSinceEpoch.toString();
-    _box.put(id, {
-      'name': name,
-      'amount': monthlyAmount,
-      'category': category.index,
-      'created': DateTime.now().millisecondsSinceEpoch,
-    });
+    final sub = Subscription(
+      id: id,
+      name: name,
+      monthlyAmount: monthlyAmount,
+      category: category,
+      created: DateTime.now(),
+    );
+    _box.put(id, sub.toMap());
     notifyListeners();
   }
 
   double monthlyBurnTotal() {
     var sum = 0.0;
-    for (final m in _rows()) {
-      sum += (m['amount'] as num).toDouble();
+    for (final sub in _all()) {
+      sum += sub.monthlyAmount;
     }
     return sum;
   }
@@ -58,10 +79,8 @@ class SubscriptionRepository extends ChangeNotifier {
       SpendCategory.utilities: 0.0,
       SpendCategory.entertainment: 0.0,
     };
-    for (final m in _rows()) {
-      final ci = (m['category'] as num).toInt().clamp(0, 2);
-      final cat = SpendCategory.values[ci];
-      out[cat] = out[cat]! + (m['amount'] as num).toDouble();
+    for (final sub in _all()) {
+      out[sub.category] = out[sub.category]! + sub.monthlyAmount;
     }
     return out;
   }

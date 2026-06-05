@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:sub_tracker/data/subscription_repository.dart';
+import 'package:sub_tracker/data/models/subscription.dart';
 import 'package:sub_tracker/theme.dart';
 
 const _chartSize = 240.0;
@@ -15,10 +15,12 @@ class SpendingPichart extends StatefulWidget {
     super.key,
     required this.totals,
     required this.serviceCount,
+    required this.currencySymbol,
   });
 
   final Map<SpendCategory, double> totals;
   final int serviceCount;
+  final String currencySymbol;
 
   @override
   State<SpendingPichart> createState() => _SpendingPichartState();
@@ -134,6 +136,7 @@ class _SpendingPichartState extends State<SpendingPichart> {
                         segment: segments[_hoveredSegmentIndex!],
                         segmentIndex: _hoveredSegmentIndex!,
                         allSegments: segments,
+                        currencySymbol: widget.currencySymbol,
                       ),
                   ],
                 ),
@@ -208,11 +211,13 @@ class _PichartHoverTooltip extends StatelessWidget {
     required this.segment,
     required this.segmentIndex,
     required this.allSegments,
+    required this.currencySymbol,
   });
 
   final _PichartSegment segment;
   final int segmentIndex;
   final List<_PichartSegment> allSegments;
+  final String currencySymbol;
 
   @override
   Widget build(BuildContext context) {
@@ -230,7 +235,7 @@ class _PichartHoverTooltip extends StatelessWidget {
     final tipY = cy + radius * 0.92 * math.sin(mid);
 
     final cost = NumberFormat.currency(
-      symbol: r'$',
+      symbol: currencySymbol,
       decimalDigits: 0,
     ).format(segment.amount);
 

@@ -6,16 +6,19 @@ class YourBurnSection extends StatelessWidget {
   const YourBurnSection({
     super.key,
     required this.monthlyTotal,
+    required this.currencySymbol,
     this.showPlaceholderWhenEmpty = true,
   });
 
   final double monthlyTotal;
+  final String currencySymbol;
   final bool showPlaceholderWhenEmpty;
 
   @override
   Widget build(BuildContext context) {
     final empty = monthlyTotal <= 0 && showPlaceholderWhenEmpty;
-    final display = empty ? '--' : '\$${monthlyTotal.toStringAsFixed(2)}';
+    final display =
+        empty ? '--' : '$currencySymbol${monthlyTotal.toStringAsFixed(2)}';
 
     return Column(
       children: [
