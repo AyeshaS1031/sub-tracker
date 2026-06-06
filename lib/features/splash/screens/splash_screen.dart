@@ -6,7 +6,7 @@ import 'package:sub_tracker/data/subscription_repository.dart';
 import 'package:sub_tracker/features/navigation/screens/app_shell_screen.dart';
 import 'package:sub_tracker/theme.dart';
 
-const Duration _kSplashNavigateDelay = Duration(seconds: 2);
+const Duration _kSplashNavigateDelay = Duration(seconds: 3);
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key, required this.repo});

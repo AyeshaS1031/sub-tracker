@@ -1,14 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:sub_tracker/data/models/subscription.dart';
+import 'package:sub_tracker/services/notifs_service.dart';
 
-/// Reads and writes subscriptions in Hive.
-/// Screens never touch Hive directly — they call methods here.
 class SubscriptionRepository extends ChangeNotifier {
-  SubscriptionRepository(this._box, this._settingsBox);
+  SubscriptionRepository(this._box, this._settingsBox, this._notifications);
 
   final Box<dynamic> _box;
   final Box<dynamic> _settingsBox;
+  final NotificationService _notifications;
 
   static const String boxName = 'subscriptions';
   static const String settingsBoxName = 'settings';
@@ -27,7 +27,12 @@ class SubscriptionRepository extends ChangeNotifier {
     return '$currencySymbol${amount.toStringAsFixed(decimals)}';
   }
 
+  void _notify(Subscription sub) {
+    _notifications.schedule(sub);
+  }
+
   void clearAll() {
+    _notifications.cancelAll();
     _box.clear();
     notifyListeners();
   }
@@ -37,7 +42,9 @@ class SubscriptionRepository extends ChangeNotifier {
     for (final key in _box.keys) {
       final raw = _box.get(key);
       if (raw is Map) {
-        out.add(Subscription.fromMap(key.toString(), Map<String, dynamic>.from(raw)));
+        out.add(
+          Subscription.fromMap(key.toString(), Map<String, dynamic>.from(raw)),
+        );
       }
     }
     out.sort((a, b) => b.created.compareTo(a.created));
@@ -46,10 +53,28 @@ class SubscriptionRepository extends ChangeNotifier {
 
   List<Subscription> allSubscriptions() => _all();
 
+  List<Subscription> activeSubscriptions() =>
+      _all().where((s) => s.isActive).toList();
+
+  void updateSubscription(Subscription sub) {
+    _notify(sub);
+    _box.put(sub.id, sub.toMap());
+    notifyListeners();
+  }
+
+  void setActive(String id, bool isActive) {
+    final subs = _all();
+    final i = subs.indexWhere((s) => s.id == id);
+    if (i < 0) return;
+    updateSubscription(subs[i].copyWith(isActive: isActive));
+  }
+
   void addSubscription({
     required String name,
     required double monthlyAmount,
     required SpendCategory category,
+    bool isActive = true,
+    DateTime? deadline,
   }) {
     final id = DateTime.now().millisecondsSinceEpoch.toString();
     final sub = Subscription(
@@ -58,20 +83,38 @@ class SubscriptionRepository extends ChangeNotifier {
       monthlyAmount: monthlyAmount,
       category: category,
       created: DateTime.now(),
+      isActive: isActive,
+      deadline: deadline,
     );
     _box.put(id, sub.toMap());
+    _notify(sub);
     notifyListeners();
+  }
+
+  List<Subscription> upcomingDeadlines({int withinDays = 7}) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final cutoff = today.add(Duration(days: withinDays));
+    return _all().where((s) {
+      if (!s.isActive || s.deadline == null) return false;
+      final due = DateTime(
+        s.deadline!.year,
+        s.deadline!.month,
+        s.deadline!.day,
+      );
+      return !due.isBefore(today) && !due.isAfter(cutoff);
+    }).toList()..sort((a, b) => a.deadline!.compareTo(b.deadline!));
   }
 
   double monthlyBurnTotal() {
     var sum = 0.0;
     for (final sub in _all()) {
-      sum += sub.monthlyAmount;
+      if (sub.isActive) sum += sub.monthlyAmount;
     }
     return sum;
   }
 
-  int serviceCount() => _box.length;
+  int serviceCount() => activeSubscriptions().length;
 
   Map<SpendCategory, double> totalsByCategory() {
     final out = {
@@ -80,7 +123,9 @@ class SubscriptionRepository extends ChangeNotifier {
       SpendCategory.entertainment: 0.0,
     };
     for (final sub in _all()) {
-      out[sub.category] = out[sub.category]! + sub.monthlyAmount;
+      if (sub.isActive) {
+        out[sub.category] = out[sub.category]! + sub.monthlyAmount;
+      }
     }
     return out;
   }

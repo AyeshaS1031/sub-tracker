@@ -107,7 +107,6 @@ class _AppShellScreenState extends State<AppShellScreen> {
               child: const Icon(Icons.add, size: 28),
             )
           : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _tab,
         onTap: (i) {

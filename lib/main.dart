@@ -3,17 +3,30 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:sub_tracker/data/subscription_repository.dart';
 import 'package:sub_tracker/features/splash/screens/splash_screen.dart';
 import 'package:sub_tracker/theme.dart';
+import 'package:sub_tracker/services/notifs_service.dart';
 
 Future<SubscriptionRepository> _initRepo() async {
+  final notifications = NotificationService();
+  await notifications.init();
+
   await Hive.initFlutter();
   final box = await Hive.openBox<dynamic>(SubscriptionRepository.boxName);
-  final settingsBox =
-      await Hive.openBox<dynamic>(SubscriptionRepository.settingsBoxName);
-  return SubscriptionRepository(box, settingsBox);
+  final settingsBox = await Hive.openBox<dynamic>(
+    SubscriptionRepository.settingsBoxName,
+  );
+  final repo = SubscriptionRepository(box, settingsBox, notifications);
+
+  for (final sub in repo.allSubscriptions()) {
+    await notifications.schedule(
+      sub
+    );
+    
+  }
+
+  return repo;
 }
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
   runApp(const SubtrackrApp());
 }
 
@@ -25,7 +38,6 @@ class SubtrackrApp extends StatelessWidget {
     return MaterialApp(
       title: 'Subtrackr',
       theme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark,
       home: FutureBuilder<SubscriptionRepository>(
         future: _initRepo(),
         builder: (context, snapshot) {

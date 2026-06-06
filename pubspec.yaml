@@ -9,13 +9,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.8
   google_fonts: ^6.3.0
-  hive: ^2.2.3
   hive_flutter: ^1.1.0
-  path_provider: ^2.1.5
   fl_chart: ^0.69.2
   intl: ^0.20.2
+  flutter_local_notifications: ^19.0.0
+  timezone: ^0.10.0
+
+
 
 dev_dependencies:
   flutter_test:
@@ -24,3 +25,4 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+

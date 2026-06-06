@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:sub_tracker/data/models/subscription.dart';
 import 'package:sub_tracker/data/subscription_repository.dart';
 import 'package:sub_tracker/theme.dart';
@@ -19,6 +20,7 @@ class ViewSubscriptionScreen extends StatelessWidget {
           listenable: repo,
           builder: (context, _) {
             final subs = repo.allSubscriptions();
+            final activeCount = subs.where((s) => s.isActive).length;
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -37,7 +39,7 @@ class ViewSubscriptionScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Text(
-                    '${subs.length} total',
+                    '$activeCount active · ${subs.length} total',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       color: AppTheme.outline,
@@ -57,6 +59,7 @@ class ViewSubscriptionScreen extends StatelessWidget {
                       itemBuilder: (context, index) {
                         return _SubscriptionTile(
                           sub: subs[index],
+                          repo: repo,
                           amountLabel:
                               '${repo.formatMoney(subs[index].monthlyAmount)}/mo',
                         );
@@ -109,55 +112,119 @@ class _EmptyState extends StatelessWidget {
 class _SubscriptionTile extends StatelessWidget {
   const _SubscriptionTile({
     required this.sub,
+    required this.repo,
     required this.amountLabel,
   });
 
   final Subscription sub;
+  final SubscriptionRepository repo;
   final String amountLabel;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.outlineVariant),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    final opacity = sub.isActive ? 1.0 : 0.55;
+    final deadlineText = sub.deadline != null
+        ? DateFormat.yMMMd().format(sub.deadline!)
+        : null;
+
+    return Opacity(
+      opacity: opacity,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: sub.isOverdue ? AppTheme.error : AppTheme.outlineVariant,
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          sub.name,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.onSurface,
+                            decoration: sub.isActive
+                                ? null
+                                : TextDecoration.lineThrough,
+                          ),
+                        ),
+                      ),
+                      if (!sub.isActive)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Inactive',
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.outline,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    sub.categoryLabel,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppTheme.outline,
+                    ),
+                  ),
+                  if (deadlineText != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      sub.isOverdue
+                          ? 'Overdue · $deadlineText'
+                          : 'Due $deadlineText',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: sub.isOverdue ? AppTheme.error : AppTheme.secondary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  sub.name,
+                  amountLabel,
                   style: GoogleFonts.inter(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.onSurface,
+                    color: sub.isActive ? AppTheme.secondary : AppTheme.outline,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  sub.categoryLabel,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppTheme.outline,
-                  ),
+                Switch(
+                  value: sub.isActive,
+                  activeThumbColor: AppTheme.secondary,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  onChanged: (v) => repo.setActive(sub.id, v),
                 ),
               ],
             ),
-          ),
-          Text(
-            amountLabel,
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.secondary,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

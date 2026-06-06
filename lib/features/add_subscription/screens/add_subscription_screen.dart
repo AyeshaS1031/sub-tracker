@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:sub_tracker/data/models/subscription.dart';
 import 'package:sub_tracker/data/subscription_repository.dart';
 import 'package:sub_tracker/theme.dart';
@@ -16,12 +17,37 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
   final _nameCtrl = TextEditingController();
   final _amountCtrl = TextEditingController();
   SpendCategory _cat = SpendCategory.subscriptions;
+  bool _isActive = true;
+  DateTime? _deadline;
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _amountCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickDeadline() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _deadline ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: AppTheme.secondary,
+              onPrimary: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() => _deadline = picked);
+    }
   }
 
   void _save() {
@@ -35,12 +61,22 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
       return;
     }
 
-    widget.repo.addSubscription(name: name, monthlyAmount: raw, category: _cat);
+    widget.repo.addSubscription(
+      name: name,
+      monthlyAmount: raw,
+      category: _cat,
+      isActive: _isActive,
+      deadline: _deadline,
+    );
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
+    final deadlineLabel = _deadline == null
+        ? 'No deadline set'
+        : DateFormat.yMMMd().format(_deadline!);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add subscription'),
@@ -97,6 +133,51 @@ class _AddSubscriptionScreenState extends State<AddSubscriptionScreen> {
                   });
                 }
               },
+            ),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Active'),
+              subtitle: Text(
+                _isActive
+                    ? 'Counts toward monthly burn'
+                    : 'Paused — excluded from totals',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.outline,
+                ),
+              ),
+              value: _isActive,
+              activeThumbColor: AppTheme.secondary,
+              onChanged: (v) => setState(() => _isActive = v),
+            ),
+            const SizedBox(height: 8),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Renewal deadline'),
+              subtitle: Text(
+                deadlineLabel,
+                style: TextStyle(
+                  color: _deadline == null ? AppTheme.outline : AppTheme.onSurface,
+                ),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_deadline != null)
+                    IconButton(
+                      icon: const Icon(Icons.clear, size: 20),
+                      color: AppTheme.outline,
+                      tooltip: 'Clear deadline',
+                      onPressed: () => setState(() => _deadline = null),
+                    ),
+                  IconButton(
+                    icon: const Icon(Icons.calendar_today),
+                    color: AppTheme.secondary,
+                    tooltip: 'Pick date',
+                    onPressed: _pickDeadline,
+                  ),
+                ],
+              ),
             ),
             const Spacer(),
             FilledButton(

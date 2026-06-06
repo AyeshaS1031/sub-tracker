@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static const Color background = Color(0xFF0e0e0e);
@@ -13,7 +12,6 @@ class AppTheme {
   static const Color secondary = Color(0xFF67a4d2);
   static const Color secondaryContainer = Color(0xFF003f5f);
   static const Color tertiary = Color(0xFFFF946e);
-  static const Color onBackground = Color(0xFFe7e5e5);
   static const Color onSurface = Color(0xFFe7e5e5);
   static const Color outline = Color(0xFF767575);
   static const Color outlineVariant = Color(0xFF484848);
@@ -42,28 +40,6 @@ class AppTheme {
       onInverseSurface: onSurface,
       inversePrimary: primaryContainer,
       scrim: Colors.black,
-    ),
-    textTheme: TextTheme(
-      displayLarge: GoogleFonts.spaceGrotesk(
-        fontSize: 56,
-        fontWeight: FontWeight.w700,
-        color: onBackground,
-      ),
-      headlineSmall: GoogleFonts.spaceGrotesk(
-        fontSize: 24,
-        fontWeight: FontWeight.w600,
-        color: onBackground,
-      ),
-      bodyLarge: GoogleFonts.inter(
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
-        color: onSurface,
-      ),
-      labelSmall: GoogleFonts.inter(
-        fontSize: 11,
-        fontWeight: FontWeight.w500,
-        color: onSurface,
-      ),
     ),
   );
 }
